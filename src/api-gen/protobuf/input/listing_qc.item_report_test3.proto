@@ -1,0 +1,136 @@
+/*
+# item_report
+
+//commands {
+//	listing_qc.item_report.list_report_reasons(ListReportReasonsRequest, ListReportReasonsResponse)
+//	listing_qc.item_report.add_report_reason(AddReportReasonRequest, AddReportReasonResponse)
+//	listing_qc.item_report.batch_update_report_reasons(BatchUpdateReportReasonsRequest, BatchUpdateReportReasonsResponse)
+//	listing_qc.item_report.delete_report_reason(DeleteReportReasonRequest, DeleteReportReasonResponse)
+//	listing_qc.item_report.report_item(ReportItemRequest, ReportItemResponse)
+//}
+*/
+syntax = "proto2";
+
+package item_report;
+
+message Constant {
+  // 102900000 - 103000000
+  enum ErrorCode {
+    // DB query return error and this error is not "not found"
+    ERROR_DATABASE = 102900000;
+
+    // Programming mistake, or some other problems that we can't blame external
+    // dependencies or API users
+    ERROR_INTERNAL = 102900001;
+
+    // Invalid request params
+    ERROR_PARAM = 102900002;
+
+    // API is registered but not implemented yet
+    ERROR_NOT_IMPLEMENTED = 102900003;
+
+    // Incorrect request type
+    ERROR_REQUEST_ASSERTION = 102900004;
+
+    // Incorrect response type
+    ERROR_RESPONSE_ASSERTION = 102900005;
+
+    // Deprecated API
+    ERROR_DEPRECATED = 102900006;
+  }
+
+  enum ReportReasonStatus {
+    REPORT_REASON_DELETE = 0;
+    REPORT_REASON_NORMAL = 1;
+  }
+
+  enum ReportReasonType {
+    REPORT_REASON_NEW = 0; // New reasons created after the revamp
+    REPORT_REASON_OLD = 1; // Old reasons created before the revamp
+  }
+}
+
+message ReportReason {
+  optional uint64  id = 1;
+  optional string name = 2; // 1 - 100 length
+  optional string region = 3;
+  optional string explanation = 4; // 0 - 200 length
+  optional bool   is_visible = 5; // If true, will be visible in item report page; max 20 reasons with is_visible == true
+  optional bool   is_description_mandatory = 6;
+  optional uint32 description_length_min = 7; // Range 0 - 500; description_length_min < description_length_max
+  optional uint32 description_length_max = 8; // Range 0 - 500; description_length_min < description_length_max
+  optional int32  sorting = 9; // Stores the unique position of the reason in an order configured by operators. Starts from 1 for first reason
+  optional uint32 status  = 10; // See enum ReportReasonStatus
+  optional string operator = 11; // email of last operator
+  optional uint64 update_time = 12;
+  optional uint64 create_time = 13;
+}
+
+message AuditParam {
+  optional string operator = 1; // email of operator
+}
+
+// Called by Listing QC Portal - Report Management Page
+// Called by Item Report BFF
+message ListReportReasonsRequest {
+  optional string region = 1; // required
+  repeated uint64 reason_ids = 2; // optional
+  optional bool is_visible = 3; // optional
+  optional bool is_description_mandatory = 4; // optional
+  repeated uint32 status_list = 5; // optional; See enum ReportReasonStatus; defaults to all statuses if not set
+  optional uint32 reason_type = 6; // optional; See enum ReportReasonType; defaults to REPORT_REASON_NEW(0) if not set
+}
+
+message ListReportReasonsResponse {
+  optional string debug_msg = 1;
+  repeated ReportReason report_reasons = 2; // sorted by the order configured by the operators
+  optional string version_token = 3; // concurrency control token
+}
+
+// Called by Listing QC Portal - Report Management Page
+message AddReportReasonRequest {
+  optional AuditParam audit_param = 1; // Required
+  optional ReportReason report_reason = 2; // Required
+  optional string version_token = 3; // Required; Needs to match the saved version_token
+}
+
+message AddReportReasonResponse {
+  optional string debug_msg = 1;
+}
+
+// Called by Listing QC Portal - Report Management Page
+message BatchUpdateReportReasonsRequest {
+  optional AuditParam audit_param = 1; // Required
+  repeated ReportReason report_reasons = 2; // Required
+  optional string version_token = 3; // needs to match the saved version_token
+}
+
+message BatchUpdateReportReasonsResponse {
+  optional string debug_msg = 1;
+}
+
+// Called by Listing QC Portal - Report Management Page
+message DeleteReportReasonRequest {
+  optional AuditParam audit_param = 1;
+  optional uint64 report_reason_id = 2;
+  optional string region = 3;
+  optional string version_token = 4; // needs to match the saved version_token
+}
+
+message DeleteReportReasonResponse {
+  optional string debug_msg = 1;
+}
+
+// Called by Item Report BFF
+message ReportItemRequest {
+  optional uint64 item_id  = 1; // required
+  optional int64 shop_id = 2; // required
+  optional string region = 3; // required
+  optional int64 reporter_id = 4; // required
+  optional uint64 reason_id = 5; // required
+  optional string description = 6; // optional
+}
+
+message ReportItemResponse {
+  optional string debug_msg = 1;
+}
