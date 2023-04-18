@@ -1,38 +1,23 @@
-import { Card, Input } from "antd";
 import { useState } from "react";
-import { protoBufToTsType } from "../../api-gen/protobuf/src/main";
 import UploadFile from "../../components/Upload";
 import "./index.css";
+import Editor from "@monaco-editor/react";
+import { protoBufToTsType } from "../../utils/protobuf/src/main";
 
 const EditPage = () => {
   const [protoValue, setValue] = useState("");
 
-  const typeValue = protoValue;
+  const typeValue = protoBufToTsType("test", protoValue, { keepCase: false });
 
   const handleChange = (value: string) => {
     setValue(value);
-    console.log(2222, protoBufToTsType("test", value, { keepCase: false }));
   };
 
   return (
     <div className="layout">
       <UploadFile onChange={handleChange} />
-      <Input.TextArea
-        autoSize={{ minRows: 30, maxRows: 100 }}
-        value={protoValue}
-        style={{ width: "500px" }}
-        onChange={(e) => setValue(e.target.value)}
-      />
-      <Card
-        style={{
-          marginLeft: "50px",
-          minWidth: "500px",
-          maxWidth: "800px",
-        }}
-      >
-        <div></div>
-        {typeValue}
-      </Card>
+      <Editor height="90vh" defaultLanguage="proto" value={protoValue} />
+      <Editor height="90vh" defaultLanguage="json" value={typeValue} />
     </div>
   );
 };

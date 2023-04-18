@@ -43,20 +43,14 @@ const UploadFile: React.FC<{
       setFileList(newFileList);
     },
     beforeUpload: (file) => {
-      console.log(
-        111,
-        file.text().then((res) => {
-          console.log(222, res);
-          onChange(res);
-        }),
-        reader.readAsText(file)
-      );
-
+      file.text().then((res) => {
+        onChange(res);
+      });
       setFileList([...fileList, file]);
-
       return false;
     },
     fileList,
+    maxCount: 1,
   };
 
   return (
@@ -64,15 +58,6 @@ const UploadFile: React.FC<{
       <Upload {...props}>
         <Button icon={<UploadOutlined />}>Select File</Button>
       </Upload>
-      <Button
-        type="primary"
-        onClick={handleUpload}
-        disabled={fileList.length === 0}
-        loading={uploading}
-        style={{ marginTop: 16 }}
-      >
-        {uploading ? "Uploading" : "Start Upload"}
-      </Button>
     </>
   );
 };
